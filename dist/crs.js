@@ -1,7 +1,7 @@
 /**
  * country-region-selector
  * -----------------------
- * 0.5.0
+ * 0.5.1
  * @author Ben Keen
  * @repo https://github.com/benkeen/country-region-selector
  * @licence MIT
@@ -74,8 +74,6 @@ var _data = [["Afghanistan","AF","Badakhshan~BDS|Badghis~BDG|Baghlan~BGL|Balkh~B
 
         var countries = _getCountries(countryElement);
 
-        console.log(customValue);
-
         for (var i = 0; i < countries.length; i++) {
             var val = (customValue === "shortcode" || customValue === "2-char") ? countries[i][1] : countries[i][0];
 
@@ -112,12 +110,14 @@ var _data = [["Afghanistan","AF","Badakhshan~BDS|Badghis~BDG|Baghlan~BGL|Balkh~B
             if (defaultSelectedValue !== null && countryElement.selectedIndex > 0) {
                 _populateRegionFields(countryElement, regionElement);
 
-                var defaultRegionSelectedValue = regionElement.getAttribute("data-default-value");
+                var defaultRegionSelectedValue = _extractSelectedRegions(regionElement);
                 var useShortcode = (regionElement.getAttribute("data-value") === "shortcode");
                 if (defaultRegionSelectedValue !== null) {
                     var index = (_showEmptyCountryOption) ? countryElement.selectedIndex - 1 : countryElement.selectedIndex;
                     var data = countries[index][3];
-                    _setDefaultRegionValue(regionElement, data, defaultRegionSelectedValue, useShortcode);
+                    for (var l=0, ll=defaultRegionSelectedValue.length; l < ll; l+=1) {
+                        _setDefaultRegionValue(regionElement, data, defaultRegionSelectedValue[l], useShortcode);
+                    }
                 }
             } else if (_showEmptyCountryOption === false) {
                 _populateRegionFields(countryElement, regionElement);
@@ -132,7 +132,7 @@ var _data = [["Afghanistan","AF","Badakhshan~BDS|Badghis~BDG|Baghlan~BGL|Balkh~B
     var _initRegionField = function (el) {
         var customOptionStr = el.getAttribute("data-blank-option");
         var defaultOptionStr = customOptionStr ? customOptionStr : "-";
-        var showEmptyOption = el.getAttribute("data-show-default-option");
+        var showEmptyOption = !el.multiple && el.getAttribute("data-show-default-option");
         _showEmptyRegionOption = (showEmptyOption === null) ? true : (showEmptyOption === "true");
 
         el.length = 0;
@@ -192,11 +192,23 @@ var _data = [["Afghanistan","AF","Badakhshan~BDS|Badghis~BDG|Baghlan~BGL|Balkh~B
         }
     };
 
+    var _extractSelectedRegions = function(regionElement) {
+        if (regionElement.getAttribute("data-default-values")) {
+            return regionElement.getAttribute("data-default-values").split(',');
+        } else if (regionElement.getAttribute("data-default-value")) {
+            // wrap single values in array, so we can always treat them the same
+            return [regionElement.getAttribute("data-default-value")];
+        }
+    }
+
     var _setDefaultRegionValue = function (field, data, val, useShortcode) {
+        var idx;
+        var showEmpty = !field.multiple && _showEmptyRegionOption;
         for (var i = 0; i < data.regions.length; i++) {
             var currVal = (useShortcode && data.hasShortcodes && data.regions[i][1]) ? data.regions[i][1] : data.regions[i][0];
             if (currVal === val) {
-                field.selectedIndex = (_showEmptyRegionOption) ? i + 1 : i;
+                idx = (showEmpty) ? i + 1 : i;
+                field.options[idx].selected = 'selected';
                 break;
             }
         }
@@ -232,7 +244,7 @@ var _data = [["Afghanistan","AF","Badakhshan~BDS|Badghis~BDG|Baghlan~BGL|Balkh~B
                 var val = weWantAndHaveShortCodes ? regionData.regions[i][1] : regionData.regions[i][0];
                 regionElement.options[regionElement.length] = new Option(regionData.regions[i][0], val);
             }
-            regionElement.selectedIndex = 0;
+            if (!regionElement.multiple) { regionElement.selectedIndex = 0 };
         }
     };
 
