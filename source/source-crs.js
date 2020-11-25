@@ -197,6 +197,8 @@
         } else if (regionElement.getAttribute("data-default-value")) {
             // wrap single values in array, so we can always treat them the same
             return [regionElement.getAttribute("data-default-value")];
+        } else {
+            return null;
         }
     }
 
